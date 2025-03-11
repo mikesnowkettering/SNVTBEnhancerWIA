@@ -30,7 +30,7 @@ For this extension to function correctly, your ServiceNow instance must meet the
 ## Installation
 
 ### From Edge Add-ons Store (Recommended)
-1. Visit the [Microsoft Edge Add-ons Store](https://microsoftedge.microsoft.com/addons/) (Link to be added after publishing).
+1. Visit the [Microsoft Edge Add-ons Store](https://microsoftedge.microsoft.com/addons/detail/servicenow-visual-task-bo/jmhhlihdkbdeemfdmehanpkbfkkahpdd).
 2. Click **Install** and follow the on-screen instructions.
 
 ### Manual Installation (Development Mode)
