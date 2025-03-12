@@ -34,7 +34,7 @@ For this extension to function correctly, your ServiceNow instance must meet the
 2. Click **Get** and follow the on-screen instructions.
 
 ### Manual Installation (Development Mode)
-1. Download or clone this repository to a folder on your computer.  You only need the manifest.json and content.js files.
+1. Download or clone this repository to a folder on your computer.
 2. Open Microsoft Edge and navigate to `edge://extensions/`.
 3. Enable **Developer Mode** (toggle in the bottom left).
 4. Click **Load unpacked** and select the folder containing the extension files.
