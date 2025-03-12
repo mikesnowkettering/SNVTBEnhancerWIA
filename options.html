@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>ServiceNow VTB Enhancer Options</title>
+  <link href="https://fonts.googleapis.com/css?family=Roboto:400,500" rel="stylesheet">
+  <style>
+    /* Modern UI styles */
+    body {
+      font-family: 'Roboto', sans-serif;
+      background-color: #f4f7f9;
+      margin: 0;
+      padding: 20px;
+      color: #333;
+    }
+    .container {
+      max-width: 600px;
+      margin: auto;
+      background: #fff;
+      padding: 30px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      border-radius: 8px;
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 20px;
+    }
+    th, td {
+      padding: 12px;
+      text-align: left;
+      border-bottom: 1px solid #e0e0e0;
+      vertical-align: middle;
+    }
+    th {
+      background-color: #f1f3f5;
+    }
+    input[type="number"] {
+      width: 100%;
+      padding: 8px;
+      box-sizing: border-box;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    /* Style the color picker so the chosen color is clearly visible */
+    input[type="color"] {
+      width: 50px;
+      height: 50px;
+      padding: 0;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .btn {
+      background-color: #007bff;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+      margin-right: 10px;
+    }
+    .btn:hover {
+      background-color: #0056b3;
+    }
+    .btn-secondary {
+      background-color: #6c757d;
+    }
+    .btn-secondary:hover {
+      background-color: #565e64;
+    }
+    .action-btn {
+      background-color: transparent;
+      border: none;
+      color: #d9534f;
+      cursor: pointer;
+      font-size: 16px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Enhancer Options</h1>
+    <p>Configure the age bands below. For each row, enter the maximum number of days (if applicable) and select the badge color. The last band (∞) represents no limit and cannot be edited.</p>
+    <table id="ageBandsTable">
+      <thead>
+        <tr>
+          <th>Max Days</th>
+          <th>Color</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- Age band rows will be generated here -->
+      </tbody>
+    </table>
+    <button id="addRowBtn" class="btn">Add Age Band</button>
+    <div style="margin-top:20px;">
+      <button id="saveBtn" class="btn">Save</button>
+      <button id="resetBtn" class="btn btn-secondary">Reset to Default</button>
+    </div>
+    <div id="status" style="margin-top:20px;"></div>
+  </div>
+  <script src="options.js"></script>
+</body>
+</html>
