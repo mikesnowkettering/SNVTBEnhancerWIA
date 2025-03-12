@@ -9,7 +9,7 @@ The **ServiceNow Visual Task Board Enhancer - Work Item Age** is a Microsoft Edg
 - Automatically identifies task cards on ServiceNow Visual Task Boards.
 - Extracts the **Actual Start Date** field from each card.
 - Calculates and displays the Work Item Age in a badge at the bottom of each card.
-- Uses color-coding to indicate urgency:
+- Uses customizable color-coding to indicate urgency. Here are the defaults:
   - **< 7 days**: Light yellow (`#f9e79f`)
   - **7–30 days**: Moderate orange (`#f0ad4e`)
   - **30–90 days**: Strong orange (`#e67e22`)
@@ -46,6 +46,14 @@ For this extension to function correctly, your ServiceNow instance must meet the
 2. Open any board where task cards include the **Actual Start Date** in their form view.
 3. If the extension is working, each card will display an "Age" badge at the bottom.
 4. The badge will be color-coded based on task age.
+
+## Customization
+
+You can customize the color coding of the Work Item Age, both the number of days and the color, by using the Extension Options:
+
+1. Right-click the extension icon in the Edge toolbar and select **Options**.
+2. Adjust the age bands and colors as desired.
+3. Save your changes.
 
 ## Troubleshooting
 
