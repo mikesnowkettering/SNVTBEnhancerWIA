@@ -51,7 +51,7 @@ For this extension to function correctly, your ServiceNow instance must meet the
 
 You can customize the color coding of the Work Item Age, both the number of days and the color, by using the Extension Options:
 
-1. Right-click the extension icon in the Edge toolbar and select **Options**.
+1. Click the extension icon in the Edge toolbar and select **Extension Options**.
 2. Adjust the age bands and colors as desired.
 3. Save your changes.
 
