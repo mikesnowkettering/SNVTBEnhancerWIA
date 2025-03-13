@@ -134,7 +134,7 @@ document.addEventListener('DOMContentLoaded', function() {
       loadConfig(function(config) {
         let bands = getBandsFromTable();
         bands.push({ maxDays: 1, color: '#ffffff' });
-        // Remove any existing infinity band, then re-add it at the end.
+        // Remove any existing 9999 band, then re-add it at the end.
         bands = bands.filter(b => b.maxDays !== 9999);
         bands.sort((a, b) => a.maxDays - b.maxDays);
         bands.push({ maxDays: 9999, color: '#d9534f' });
