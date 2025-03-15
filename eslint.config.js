@@ -1,15 +1,13 @@
-module.exports = {
-  env: {
-    browser: true,
-    es2021: true,
-    node: true,
+module.exports = [
+  {
+    languageOptions: {
+      parserOptions: { ecmaVersion: 12, sourceType: 'module' },
+      globals: {
+        window: 'readonly',
+        document: 'readonly',
+        process: 'readonly',
+      },
+    },
+    rules: { 'prettier/prettier': 'error' },
   },
-  extends: ['eslint:recommended', 'plugin:prettier/recommended'],
-  parserOptions: {
-    ecmaVersion: 12,
-    sourceType: 'module',
-  },
-  rules: {
-    'prettier/prettier': 'error',
-  },
-};
+];
