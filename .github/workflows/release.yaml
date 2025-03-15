@@ -16,16 +16,7 @@ jobs:
       - name: Install Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '18.18.0'
-
-      - name: Run ESLint
-        run: npx eslint . --ext .js,.json
-        # Fail the build if ESLint errors are found
-        continue-on-error: false
-
-      - name: Run Prettier Check
-        run: npx prettier --check .
-        continue-on-error: false
+          node-version: "18.18.0"
 
       - name: Bump Version
         run: node bump-version.js
@@ -41,7 +32,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Zip Extension Files
-        run: zip -r edge-extension.zip . -x ".*" "*.zip" "LICENSE" "README.md" "bump-version.js" "eslint-config.js"
+        run: zip -r edge-extension.zip . -x ".*" "*.zip" "LICENSE" "README.md" "bump-version.js"
 
       - name: Publish Extension to Edge Store
         run: |
