@@ -18,9 +18,6 @@ jobs:
         with:
           node-version: '16'
 
-      - name: Install Dependencies
-        run: npm install
-
       - name: Run ESLint
         run: npx eslint . --ext .js,.json
         # Fail the build if ESLint errors are found
