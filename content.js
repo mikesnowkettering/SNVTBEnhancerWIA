@@ -7,31 +7,34 @@
   - Badge background color is determined by configurable age bands loaded from chrome.storage.sync.
   - Continues watching the DOM for new card elements and applies the badge automatically.
 */
-(function() {
-  if (!window.location.href.includes("vtb.do")) return;
-  
+(function () {
+  if (!window.location.href.includes('vtb.do')) return;
+
   const defaultConfig = {
     ageBands: [
       { maxDays: 7, color: '#f9e79f' },
       { maxDays: 30, color: '#f0ad4e' },
       { maxDays: 90, color: '#e67e22' },
-      { maxDays: 9999, color: '#d9534f' }
-    ]
+      { maxDays: 9999, color: '#d9534f' },
+    ],
   };
-  
+
   // Retrieve the configuration from chrome.storage.sync.
   function getConfig(callback) {
     if (chrome && chrome.storage && chrome.storage.sync) {
-      chrome.storage.sync.get({ vtbEnhancerConfig: defaultConfig }, function(data) {
-        callback(data.vtbEnhancerConfig);
-      });
+      chrome.storage.sync.get(
+        { vtbEnhancerConfig: defaultConfig },
+        function (data) {
+          callback(data.vtbEnhancerConfig);
+        }
+      );
     } else {
       callback(defaultConfig);
     }
   }
-  
+
   // Load config then run the main logic.
-  getConfig(function(config) {
+  getConfig(function (config) {
     // --- Utility Functions ---
     function showDebugMessage(msg) {
       const div = document.createElement('div');
@@ -45,50 +48,55 @@
         padding: '5px 10px',
         borderRadius: '4px',
         zIndex: '9999',
-        fontSize: '14px'
+        fontSize: '14px',
       });
       document.body.appendChild(div);
       setTimeout(() => div.remove(), 3000);
     }
-  
+
     function calculateDaysDiff(dateStr) {
       const d = new Date(dateStr);
       if (isNaN(d)) return null;
       return Math.floor((Date.now() - d.getTime()) / (1000 * 60 * 60 * 24));
     }
-  
+
     function findActualStartDate(card) {
       const liList = card.querySelectorAll('li.ng-scope');
       for (const li of liList) {
-        const spans = li.querySelectorAll('span.sn-widget-list-table-cell.ng-binding');
-        if (spans.length >= 2 && spans[0].textContent.trim() === 'Actual start date') {
+        const spans = li.querySelectorAll(
+          'span.sn-widget-list-table-cell.ng-binding'
+        );
+        if (
+          spans.length >= 2 &&
+          spans[0].textContent.trim() === 'Actual start date'
+        ) {
           return spans[1].textContent.trim();
         }
       }
       return null;
     }
-  
+
     function getBadgeColor(age) {
       for (const band of config.ageBands) {
         if (age < band.maxDays) return band.color;
       }
       return '#000000';
     }
-  
+
     // Returns black or white depending on background brightness.
     function getContrastColor(hexColor) {
       try {
-        if (hexColor[0] === "#") hexColor = hexColor.substring(1);
+        if (hexColor[0] === '#') hexColor = hexColor.substring(1);
         const r = parseInt(hexColor.substr(0, 2), 16);
         const g = parseInt(hexColor.substr(2, 2), 16);
         const b = parseInt(hexColor.substr(4, 2), 16);
         const brightness = (r * 299 + g * 587 + b * 114) / 1000;
-        return brightness > 128 ? "#000000" : "#ffffff";
+        return brightness > 128 ? '#000000' : '#ffffff';
       } catch (e) {
-        return "#000000";
+        return '#000000';
       }
     }
-  
+
     function createBadge(text, bgColor) {
       const badge = document.createElement('div');
       badge.textContent = text;
@@ -104,13 +112,13 @@
         bottom: '0px',
         left: '50%',
         transform: 'translateX(-50%)',
-        zIndex: '1000'
+        zIndex: '1000',
       });
       return badge;
     }
-  
+
     let updatedCount = 0;
-  
+
     function processCard(card) {
       if (card.hasAttribute('data-task-age-enhanced')) return;
       try {
@@ -119,7 +127,10 @@
         const age = calculateDaysDiff(actualStart);
         if (age === null) return;
         const badgeColor = getBadgeColor(age);
-        const badge = createBadge(`Age: ${age} day${age !== 1 ? 's' : ''}`, badgeColor);
+        const badge = createBadge(
+          `Age: ${age} day${age !== 1 ? 's' : ''}`,
+          badgeColor
+        );
         if (getComputedStyle(card).position === 'static') {
           card.style.position = 'relative';
         }
@@ -130,27 +141,30 @@
         console.error('Work Item Age Error:', err);
       }
     }
-  
+
     function processExistingCards() {
       const cards = document.querySelectorAll('.vtb-card-component-wrapper');
       if (!cards.length) return;
-      cards.forEach(card => processCard(card));
+      cards.forEach((card) => processCard(card));
     }
-  
+
     function observeCards() {
-      const observer = new MutationObserver(mutations => {
-        mutations.forEach(mutation => {
-          mutation.addedNodes.forEach(node => {
+      const observer = new MutationObserver((mutations) => {
+        mutations.forEach((mutation) => {
+          mutation.addedNodes.forEach((node) => {
             if (node.nodeType === Node.ELEMENT_NODE) {
-              if (node.classList.contains('vtb-card-component-wrapper')) processCard(node);
-              node.querySelectorAll?.('.vtb-card-component-wrapper').forEach(processCard);
+              if (node.classList.contains('vtb-card-component-wrapper'))
+                processCard(node);
+              node
+                .querySelectorAll?.('.vtb-card-component-wrapper')
+                .forEach(processCard);
             }
           });
         });
       });
       observer.observe(document.body, { childList: true, subtree: true });
     }
-  
+
     // Wait until the board appears to be fully loaded (using a 1-second debounce)
     function waitForBoardLoad(callback) {
       let timer = null;
@@ -165,7 +179,9 @@
         }
       });
       observer.observe(document.body, { childList: true, subtree: true });
-      const initialCards = document.querySelectorAll('.vtb-card-component-wrapper');
+      const initialCards = document.querySelectorAll(
+        '.vtb-card-component-wrapper'
+      );
       if (initialCards.length > 0) {
         if (timer) clearTimeout(timer);
         timer = setTimeout(() => {
@@ -174,7 +190,7 @@
         }, 1000);
       }
     }
-  
+
     function init() {
       waitForBoardLoad(() => {
         processExistingCards();
@@ -182,7 +198,7 @@
         observeCards();
       });
     }
-  
+
     if (document.readyState === 'loading') {
       document.addEventListener('DOMContentLoaded', init);
     } else {

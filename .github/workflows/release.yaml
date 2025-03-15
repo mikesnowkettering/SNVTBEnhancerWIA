@@ -1,0 +1,67 @@
+name: CI/CD Pipeline for SNVTBEnhancerWIA
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Install Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '16'
+
+      - name: Install Dependencies
+        run: npm install
+
+      - name: Run ESLint
+        run: npx eslint . --ext .js,.json
+        # Fail the build if ESLint errors are found
+        continue-on-error: false
+
+      - name: Run Prettier Check
+        run: npx prettier --check .
+        continue-on-error: false
+
+      - name: Bump Version
+        run: node bump-version.js
+
+      - name: Commit Version Bump
+        run: |
+          git config --global user.email "mike.snow@ketteringhealth.org"
+          git config --global user.name "Mike Snow"
+          git add manifest.json
+          git commit -m "Bump version [skip ci]" || echo "No changes to commit"
+          git push
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Zip Extension Files
+        run: zip -r edge-extension.zip . -x ".*" "*.zip" "LICENSE" "README.md" "bump-version.js"
+
+      - name: Publish Extension to Edge Store
+        run: |
+          base64_zip=$(base64 -w 0 edge-extension.zip)
+          response=$(curl -s -w "%{http_code}" -o response.txt -X POST "https://graph.microsoft.com/v1.0/edge/addons/${{ secrets.EDGE_PRODUCT_ID }}/submit" \
+            -H "Authorization: Bearer ${{ secrets.EDGE_ACCESS_TOKEN }}" \
+            -H "Content-Type: application/json" \
+            -d "{
+                 \"file\": \"data:application/zip;base64,$base64_zip\",
+                 \"notesForCertification\": \"Automated submission from CI/CD\",
+                 \"publishing\": {
+                   \"listings\": [{ \"market\": \"en-us\", \"description\": \"Automated update\" }]
+                 }
+               }")
+          echo "Response code: $response"
+          cat response.txt
+          if [ "$response" -ne 200 ]; then
+            echo "Error: Publishing failed."
+            exit 1
+          fi
