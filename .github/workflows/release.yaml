@@ -39,17 +39,49 @@ jobs:
 
       - name: Publish Extension to Edge Store
         run: |
-          response=$(curl \
-          -H "Authorization: ApiKey ${{ secrets.EDGE_API_KEY }}" \
-          -H "X-ClientID: ${{ secrets.EDGE_CLIENT_ID }}" \
-          -H "Content-Type: application/zip" \
-          -X POST \
-          -T edge-extension.zip \
-          -v \
-          https://api.addons.microsoftedge.microsoft.com/v1/products/${{ secrets.EDGE_PRODUCT_ID }}/submissions/draft/packages)
+          # Step 1: Upload the package to update an existing submission
+          echo "Uploading package..."
+          upload_response=$(curl -s -w "%{http_code}" -o upload_response.txt -X POST "https://api.addons.microsoftedge.microsoft.com/v1/products/${{ secrets.EDGE_PRODUCT_ID }}/submissions/draft/packages" \
+            -H "Authorization: ApiKey ${{ secrets.EDGE_API_KEY }}" \
+            -H "X-ClientID: ${{ secrets.EDGE_CLIENT_ID }}" \
+            -H "Content-Type: application/zip" \
+            --data-binary @edge-extension.zip)
 
-          echo "Response: $response"
-          if [[ "$response" != *"200"* ]]; then
-            echo "Error: Publishing failed."
+          echo "Upload response code: $upload_response"
+          cat upload_response.txt
+          if [[ "$upload_response" != "202" ]]; then
+            echo "Error: Package upload failed."
+            exit 1
+          fi
+
+          # Step 2: Check the status of the package upload
+          echo "Checking package upload status..."
+          status_response=$(curl -s -w "%{http_code}" -o status_response.txt -X GET "https://api.addons.microsoftedge.microsoft.com/v1/products/${{ secrets.EDGE_PRODUCT_ID }}/submissions/draft" \
+            -H "Authorization: ApiKey ${{ secrets.EDGE_API_KEY }}" \
+            -H "X-ClientID: ${{ secrets.EDGE_CLIENT_ID }}" \
+            -H "Content-Type: application/json")
+
+          echo "Status response code: $status_response"
+          cat status_response.txt
+
+          # Parse the status from the response JSON using jq
+          upload_status=$(jq -r '.status' status_response.txt)
+          echo "Package upload status: $upload_status"
+          if [[ "$upload_status" != "Succeeded" ]]; then
+            echo "Error: Package upload not successful. Current status: $upload_status"
+            exit 1
+          fi
+
+          # Step 3: Publish the product draft submission
+          echo "Publishing draft submission..."
+          publish_response=$(curl -s -w "%{http_code}" -o publish_response.txt -X POST "https://api.addons.microsoftedge.microsoft.com/v1/products/${{ secrets.EDGE_PRODUCT_ID }}/submissions/draft/publish" \
+            -H "Authorization: ApiKey ${{ secrets.EDGE_API_KEY }}" \
+            -H "X-ClientID: ${{ secrets.EDGE_CLIENT_ID }}" \
+            -H "Content-Type: application/json")
+
+          echo "Publish response code: $publish_response"
+          cat publish_response.txt
+          if [[ "$publish_response" != "202" ]]; then
+            echo "Error: Publishing draft submission failed."
             exit 1
           fi
