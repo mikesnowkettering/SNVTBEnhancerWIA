@@ -39,11 +39,6 @@ jobs:
 
       - name: Publish Extension to Edge Store
         run: |
-          # Encode the zip file in base64
-          base64_zip=$(base64 edge-extension.zip | tr -d '\n')
-
-          # Use curl to post the payload from the file
-
           response=$(curl \
           -H "Authorization: ApiKey ${{ secrets.EDGE_ACCESS_TOKEN }}" \
           -H "X-ClientID: ${{ secrets.EDGE_CLIENT_ID }}" \
@@ -51,11 +46,10 @@ jobs:
           -X POST \
           -T edge-extension.zip \
           -v \
-          https://api.addons.microsoftedge.microsoft.com/v1/products/{{ secrets.EDGE_PRODUCT_ID }}/submissions/draft/packages)
+          https://api.addons.microsoftedge.microsoft.com/v1/products/${{ secrets.EDGE_PRODUCT_ID }}/submissions/draft/packages)
 
-          echo "Response code: $response"
-          cat response.txt
-          if [ "$(tail -n1 <<< "$response")" -ne 200 ]; then
+          echo "Response: $response"
+          if [[ "$response" != *"200"* ]]; then
             echo "Error: Publishing failed."
             exit 1
           fi
