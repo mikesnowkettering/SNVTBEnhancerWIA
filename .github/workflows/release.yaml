@@ -39,17 +39,31 @@ jobs:
 
       - name: Publish Extension to Edge Store
         run: |
+          # Encode the zip file in base64
           base64_zip=$(base64 -w 0 edge-extension.zip)
+          
+          # Create a temporary payload file
+          cat <<EOF > payload.json
+          {
+            "file": "data:application/zip;base64,$base64_zip",
+            "notesForCertification": "Automated submission from CI/CD",
+            "publishing": {
+              "listings": [
+                {
+                  "market": "en-us",
+                  "description": "Automated update"
+                }
+              ]
+            }
+          }
+      EOF
+
+          # Use curl to post the payload from the file
           response=$(curl -s -w "%{http_code}" -o response.txt -X POST "https://graph.microsoft.com/v1.0/edge/addons/${{ secrets.EDGE_PRODUCT_ID }}/submit" \
             -H "Authorization: Bearer ${{ secrets.EDGE_ACCESS_TOKEN }}" \
             -H "Content-Type: application/json" \
-            -d "{
-                 \"file\": \"data:application/zip;base64,$base64_zip\",
-                 \"notesForCertification\": \"Automated submission from CI/CD\",
-                 \"publishing\": {
-                   \"listings\": [{ \"market\": \"en-us\", \"description\": \"Automated update\" }]
-                 }
-               }")
+            --data @payload.json)
+
           echo "Response code: $response"
           cat response.txt
           if [ "$response" -ne 200 ]; then
