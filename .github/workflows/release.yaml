@@ -40,7 +40,7 @@ jobs:
       - name: Publish Extension to Edge Store
         run: |
           response=$(curl \
-          -H "Authorization: ApiKey ${{ secrets.EDGE_ACCESS_TOKEN }}" \
+          -H "Authorization: ApiKey ${{ secrets.EDGE_API_KEY }}" \
           -H "X-ClientID: ${{ secrets.EDGE_CLIENT_ID }}" \
           -H "Content-Type: application/zip" \
           -X POST \
