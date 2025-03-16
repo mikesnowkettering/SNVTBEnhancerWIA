@@ -1,4 +1,4 @@
-name: CI/CD Pipeline for SNVTBEnhancerWIA
+name: CI/CD Pipeline
 
 on:
   push:
@@ -26,22 +26,22 @@ jobs:
 
       - name: Commit Version Bump
         run: |
-          git config --global user.email "mike.snow@ketteringhealth.org"
-          git config --global user.name "Mike Snow"
+          git config --global user.email "${{ secrets.GIT_USER_EMAIL }}"
+          git config --global user.name "${{ secrets.GIT_USER_NAME }}"
           git add manifest.json
           git commit -m "Bump version [skip ci]" || echo "No changes to commit"
-          git push
+          git push https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Zip Extension Files
-        run: zip -r edge-extension.zip . -x ".*" "*.zip" "LICENSE" "README.md" "bump-version.js"
+        run: zip -r edge-extension.zip . -x ".*" "*.zip" "LICENSE" "README.md" "bump-version.js" "node_modules/*"
 
       - name: Publish Extension to Edge Store
         run: |
           # Encode the zip file in base64
-          base64_zip=$(base64 -w 0 edge-extension.zip)
-          
+          base64_zip=$(base64 edge-extension.zip | tr -d '\n')
+
           # Create a temporary payload file
           cat <<EOF > payload.json
           {
@@ -56,7 +56,7 @@ jobs:
               ]
             }
           }
-      EOF
+          EOF
 
           # Use curl to post the payload from the file
           response=$(curl -s -w "%{http_code}" -o response.txt -X POST "https://graph.microsoft.com/v1.0/edge/addons/${{ secrets.EDGE_PRODUCT_ID }}/submit" \
@@ -66,7 +66,7 @@ jobs:
 
           echo "Response code: $response"
           cat response.txt
-          if [ "$response" -ne 200 ]; then
+          if [ "$(tail -n1 <<< "$response")" -ne 200 ]; then
             echo "Error: Publishing failed."
             exit 1
           fi
