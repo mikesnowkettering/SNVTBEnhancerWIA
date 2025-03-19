@@ -27,7 +27,7 @@ For this extension to function correctly, your ServiceNow instance must meet the
    - This requires configuring the form layout to include the **Actual Start Date** field in the "VTB" view (this view may need to be created if it does not already exist). The field does not need to be visible on the card by default; however, it must be part of the form view to ensure the data is available to the extension. 
 
 2. **The "Actual Start Date" must be populated** by an external process.
-   - There are some out of the box processes in ServiceNow that automatically set **Actual Start Date**. One example is when a task (enhancement, story, etc.) move into a Work in Progress state. You must ensure that this field is populated through state changes, workflows, business rules, automation scripts (like with Flow Designer), or manual entry.
+   - There are some out of the box processes in ServiceNow that automatically set **Actual Start Date**. One example is when a task (enhancement, story, etc.) moves into a Work in Progress state. You must ensure that this field is populated through state changes, workflows, business rules, automation scripts (like with Flow Designer), or manual entry.
 
 ![Highlighting the requirements of having Actual start date on the VTB view of the task.](images/screenshot2.png)
 
