@@ -4,8 +4,7 @@
 
 The **ServiceNow Visual Task Board Enhancer - Work Item Age** is a Microsoft Edge Extension designed to enhance Visual Task Boards (VTBs) in ServiceNow by displaying the Work Item Age in days. The Work Item Age is calculated as the difference between the **Actual Start Date** and the current date. This extension visually highlights task age with color-coded badges to improve task tracking and prioritization.
 
-![temp](images/screenshot1.png)
-![temp](images/screenshot2.png)
+![What the badges look like in a ServiceNow Visual Task Board](images/screenshot1.png)
 
 ## Features
 
@@ -29,6 +28,8 @@ For this extension to function correctly, your ServiceNow instance must meet the
 
 2. **The "Actual Start Date" must be populated** by an external process.
    - There are some out of the box processes in ServiceNow that automatically set **Actual Start Date**. One example is when a task (enhancement, story, etc.) move into a Work in Progress state. You must ensure that this field is populated through state changes, workflows, business rules, automation scripts (like with Flow Designer), or manual entry.
+
+![Highlighting the requirements of having Actual start date on the VTB view of the task.](images/screenshot2.png)
 
 ## Installation
 
