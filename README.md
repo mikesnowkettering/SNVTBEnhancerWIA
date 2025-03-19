@@ -4,6 +4,9 @@
 
 The **ServiceNow Visual Task Board Enhancer - Work Item Age** is a Microsoft Edge Extension designed to enhance Visual Task Boards (VTBs) in ServiceNow by displaying the Work Item Age in days. The Work Item Age is calculated as the difference between the **Actual Start Date** and the current date. This extension visually highlights task age with color-coded badges to improve task tracking and prioritization.
 
+![temp](images/screenshot1.png)
+![temp](images/screenshot2.png)
+
 ## Features
 
 - Automatically identifies task cards on ServiceNow Visual Task Boards.
