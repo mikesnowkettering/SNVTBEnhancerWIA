@@ -47,7 +47,7 @@ For this extension to function correctly, your ServiceNow instance must meet the
 ## Usage
 
 1. Navigate to your **ServiceNow Visual Task Board** (it must have `vtb.do` somewhere in the URL to run).
-2. Open any board where task cards include the **Actual Start Date** in their VTB form view (can be shown by turning on Show Card Info on the Visual Task Board settings).
+2. Open any board where task cards include the **Actual Start Date** in their VTB form view. This can be shown by turning on Show Card Info on the Visual Task Board settings (shown in the image above).
 3. If the extension is working, each card will display an "Age" badge at the bottom.
 4. The badge will be color-coded based on task age.
 
