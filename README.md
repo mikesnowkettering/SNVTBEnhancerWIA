@@ -74,7 +74,7 @@ You can customize the color coding of the Work Item Age, both the number of days
 ### 3. Extension Does Not Load
 - Ensure the extension is **enabled** in `edge://extensions/`.
 - Check the console (`F12` → Console) for errors.
-- If running manually, re-load the unpacked extension.
+- If running manually, reload the unpacked extension.
 
 ## Contribution
 
