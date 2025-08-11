@@ -13,10 +13,17 @@ document.addEventListener('DOMContentLoaded', function() {
   
     // Load config from chrome.storage.sync or fallback to defaults.
     function loadConfig(callback) {
-      if (chrome && chrome.storage && chrome.storage.sync) {
-        chrome.storage.sync.get({ vtbEnhancerConfig: defaultConfig }, function(data) {
-          callback(data.vtbEnhancerConfig);
-        });
+      if (
+        typeof chrome !== 'undefined' &&
+        chrome.storage &&
+        chrome.storage.sync
+      ) {
+        chrome.storage.sync.get(
+          { vtbEnhancerConfig: defaultConfig },
+          function (data) {
+            callback(data.vtbEnhancerConfig);
+          }
+        );
       } else {
         callback(defaultConfig);
       }
@@ -24,8 +31,12 @@ document.addEventListener('DOMContentLoaded', function() {
   
     // Save configuration using chrome.storage.sync.
     function saveConfig(config, callback) {
-      if (chrome && chrome.storage && chrome.storage.sync) {
-        chrome.storage.sync.set({ vtbEnhancerConfig: config }, function() {
+      if (
+        typeof chrome !== 'undefined' &&
+        chrome.storage &&
+        chrome.storage.sync
+      ) {
+        chrome.storage.sync.set({ vtbEnhancerConfig: config }, function () {
           if (callback) callback();
         });
       } else {
@@ -131,15 +142,20 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   
     document.getElementById('addRowBtn').addEventListener('click', () => {
-      loadConfig(function(config) {
+      loadConfig(function (config) {
         let bands = getBandsFromTable();
+        const infinityBand =
+          bands.find((b) => b.maxDays === 9999) || {
+            maxDays: 9999,
+            color: '#d9534f',
+          };
         bands.push({ maxDays: 1, color: '#ffffff' });
-        // Remove any existing 9999 band, then re-add it at the end.
-        bands = bands.filter(b => b.maxDays !== 9999);
+        // Remove any existing 9999 band, then re-add it at the end using its previous color.
+        bands = bands.filter((b) => b.maxDays !== 9999);
         bands.sort((a, b) => a.maxDays - b.maxDays);
-        bands.push({ maxDays: 9999, color: '#d9534f' });
+        bands.push(infinityBand);
         tableBody.innerHTML = '';
-        bands.forEach(band => {
+        bands.forEach((band) => {
           const row = createRow(band);
           tableBody.appendChild(row);
         });
