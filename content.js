@@ -21,7 +21,11 @@
 
   // Retrieve the configuration from chrome.storage.sync.
   function getConfig(callback) {
-    if (chrome && chrome.storage && chrome.storage.sync) {
+    if (
+      typeof chrome !== 'undefined' &&
+      chrome.storage &&
+      chrome.storage.sync
+    ) {
       chrome.storage.sync.get(
         { vtbEnhancerConfig: defaultConfig },
         function (data) {
