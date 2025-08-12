@@ -17,6 +17,7 @@ The **ServiceNow Visual Task Board Enhancer - Work Item Age** is a Microsoft Edg
   - **30–90 days**: Strong orange (`#e67e22`)
   - **90+ days**: Red (`#d9534f`)
 - Ensures contrast for readability.
+- Displays "Done" with a green badge if the card's **State** is *Resolved*, or contains *Closed* or *Canceled*.
 - Runs efficiently, avoiding duplicate processing of the same cards.
 
 ## Requirements

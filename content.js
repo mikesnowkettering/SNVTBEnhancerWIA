@@ -1,6 +1,6 @@
 /*
   ServiceNow Visual Task Board Enhancer - Work Item Age
-  Version 0.6
+  Version 0.7
   - Waits until the board has fully loaded all cards (using a MutationObserver with a debounce) 
     before processing any cards or displaying a status message.
   - Processes each card to calculate and display an "Age" badge based on the card’s "Actual start date".
@@ -80,6 +80,19 @@
       return null;
     }
 
+    function findState(card) {
+      const liList = card.querySelectorAll('li.ng-scope');
+      for (const li of liList) {
+        const spans = li.querySelectorAll(
+          'span.sn-widget-list-table-cell.ng-binding'
+        );
+        if (spans.length >= 2 && spans[0].textContent.trim() === 'State') {
+          return spans[1].textContent.trim();
+        }
+      }
+      return null;
+    }
+
     function getBadgeColor(age) {
       for (const band of config.ageBands) {
         if (age < band.maxDays) return band.color;
@@ -126,6 +139,24 @@
     function processCard(card) {
       if (card.hasAttribute('data-task-age-enhanced')) return;
       try {
+        const state = findState(card);
+        if (state) {
+          const normalized = state.toLowerCase();
+          if (
+            normalized === 'resolved' ||
+            normalized.includes('closed') ||
+            normalized.includes('canceled')
+          ) {
+            const badge = createBadge('Done', '#28a745');
+            if (getComputedStyle(card).position === 'static') {
+              card.style.position = 'relative';
+            }
+            card.appendChild(badge);
+            card.setAttribute('data-task-age-enhanced', 'true');
+            updatedCount++;
+            return;
+          }
+        }
         const actualStart = findActualStartDate(card);
         if (!actualStart) return;
         const age = calculateDaysDiff(actualStart);
