@@ -1,103 +1,68 @@
-name: CI/CD Pipeline
+name: Release
 
 on:
   push:
-    branches:
-      - main
+    branches: [main]
 
 permissions:
   contents: write
 
 jobs:
-  build-and-deploy:
+  publish:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout Code
+      - name: Checkout
         uses: actions/checkout@v3
 
-      - name: Install Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: "18.18.0"
+      - name: Bump version
+        run: node bump-version.js
 
-      #- name: Bump Version
-      #  run: node bump-version.js
-
-      - name: Commit Version Bump
-        run: |
-          git config --global user.email "${{ secrets.GIT_USER_EMAIL }}"
-          git config --global user.name "${{ secrets.GIT_USER_NAME }}"
-          git add manifest.json
-          git commit -m "Bump version" || echo "No changes to commit"
-          git push https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git
+      - name: Commit version bump
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Zip Extension Files
-        run: zip -r edge-extension.zip . -x ".*" "*.zip" "LICENSE" "README.md" "bump-version.js" "*screenshot*" "node_modules/*"
-
-      - name: Create Draft Submission if Needed
         run: |
-          echo "Creating draft submission (if it doesn't exist)..."
-          create_response=$(curl -s -w "%{http_code}" -o create_response.txt -X POST "https://api.addons.microsoftedge.microsoft.com/v1/products/${{ secrets.EDGE_PRODUCT_ID }}/submissions/draft" \
-            -H "Authorization: ApiKey ${{ secrets.EDGE_API_KEY }}" \
-            -H "X-ClientID: ${{ secrets.EDGE_CLIENT_ID }}" \
+          git config user.email "${{ secrets.GIT_USER_EMAIL }}"
+          git config user.name "${{ secrets.GIT_USER_NAME }}"
+          git add manifest.json
+          git commit -m "Bump version" || echo "No changes"
+          git push https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git
+
+      - name: Package extension
+        run: zip -r edge-extension.zip . -x ".*" "*.zip" "LICENSE" "README.md" "bump-version.js" "*screenshot*"
+
+      - name: Publish to Edge Add-ons
+        env:
+          EDGE_PRODUCT_ID: ${{ secrets.EDGE_PRODUCT_ID }}
+          EDGE_API_KEY: ${{ secrets.EDGE_API_KEY }}
+          EDGE_CLIENT_ID: ${{ secrets.EDGE_CLIENT_ID }}
+        run: |
+          set -e
+          curl -fsS -o /dev/null -X POST "https://api.addons.microsoftedge.microsoft.com/v1/products/$EDGE_PRODUCT_ID/submissions/draft" \
+            -H "Authorization: ApiKey $EDGE_API_KEY" \
+            -H "X-ClientID: $EDGE_CLIENT_ID" \
             -H "Content-Type: application/json" \
-            --data "")
-          echo "Draft submission creation response code: $create_response"
-          cat create_response.txt
-          if [[ "$create_response" != "201" && "$create_response" != "200" && "$create_response" != "204" ]]; then
-            echo "Error: Creating draft submission failed."
-            exit 1
-          fi
+            --data ""
 
-      - name: Upload Package to Update Draft Submission
-        run: |
-          echo "Uploading package..."
-          upload_response=$(curl -s -w "%{http_code}" -o upload_response.txt -X POST "https://api.addons.microsoftedge.microsoft.com/v1/products/${{ secrets.EDGE_PRODUCT_ID }}/submissions/draft/packages" \
-            -H "Authorization: ApiKey ${{ secrets.EDGE_API_KEY }}" \
-            -H "X-ClientID: ${{ secrets.EDGE_CLIENT_ID }}" \
+          curl -fsS -o /dev/null -X POST "https://api.addons.microsoftedge.microsoft.com/v1/products/$EDGE_PRODUCT_ID/submissions/draft/packages" \
+            -H "Authorization: ApiKey $EDGE_API_KEY" \
+            -H "X-ClientID: $EDGE_CLIENT_ID" \
             -H "Content-Type: application/zip" \
-            --data-binary @edge-extension.zip)
+            --data-binary @edge-extension.zip
 
-          echo "Upload response code: $upload_response"
-          cat upload_response.txt
-          if [[ "$upload_response" != "202" ]]; then
-            echo "Error: Package upload failed."
-            exit 1
-          fi
+          echo "Waiting for package processing..."
+          for i in {1..30}; do
+            status=$(curl -fsS -X GET "https://api.addons.microsoftedge.microsoft.com/v1/products/$EDGE_PRODUCT_ID/submissions/draft" \
+              -H "Authorization: ApiKey $EDGE_API_KEY" \
+              -H "X-ClientID: $EDGE_CLIENT_ID" \
+              -H "Content-Type: application/json" | jq -r '.status')
+            [ "$status" = "Succeeded" ] && break
+            echo "Current status: $status. Retrying in 10s..."
+            sleep 10
+          done
+          [ "$status" = "Succeeded" ] || { echo "Error: package processing status $status"; exit 1; }
 
-      - name: Check Package Upload Status
-        run: |
-          echo "Checking package upload status..."
-          status_response=$(curl -s -w "%{http_code}" -o status_response.txt -X GET "https://api.addons.microsoftedge.microsoft.com/v1/products/${{ secrets.EDGE_PRODUCT_ID }}/submissions/draft" \
-            -H "Authorization: ApiKey ${{ secrets.EDGE_API_KEY }}" \
-            -H "X-ClientID: ${{ secrets.EDGE_CLIENT_ID }}" \
-            -H "Content-Type: application/json")
+          curl -fsS -o /dev/null -X POST "https://api.addons.microsoftedge.microsoft.com/v1/products/$EDGE_PRODUCT_ID/submissions/draft/publish" \
+            -H "Authorization: ApiKey $EDGE_API_KEY" \
+            -H "X-ClientID: $EDGE_CLIENT_ID" \
+            -H "Content-Type: application/json"
 
-          echo "Status response code: $status_response"
-          cat status_response.txt
-
-          # Parse the status from the JSON response using jq
-          upload_status=$(jq -r '.status' status_response.txt)
-          echo "Package upload status: $upload_status"
-          if [[ "$upload_status" != "Succeeded" ]]; then
-            echo "Error: Package upload not successful. Current status: $upload_status"
-            exit 1
-          fi
-
-      - name: Publish Draft Submission
-        run: |
-          echo "Publishing draft submission..."
-          publish_response=$(curl -s -w "%{http_code}" -o publish_response.txt -X POST "https://api.addons.microsoftedge.microsoft.com/v1/products/${{ secrets.EDGE_PRODUCT_ID }}/submissions/draft/publish" \
-            -H "Authorization: ApiKey ${{ secrets.EDGE_API_KEY }}" \
-            -H "X-ClientID: ${{ secrets.EDGE_CLIENT_ID }}" \
-            -H "Content-Type: application/json")
-
-          echo "Publish response code: $publish_response"
-          cat publish_response.txt
-          if [[ "$publish_response" != "202" ]]; then
-            echo "Error: Publishing draft submission failed."
-            exit 1
-          fi
