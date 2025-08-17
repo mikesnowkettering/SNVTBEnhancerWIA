@@ -62,6 +62,8 @@
 
   function updateBoardInfo(cfg) {
     if (!boardId) return;
+    // Prevent prototype pollution
+    if (boardId === '__proto__' || boardId === 'constructor' || boardId === 'prototype') return;
     const label = document.querySelector('label.sn-navhub-title');
     if (!label) return;
     const name = label.textContent.trim();
