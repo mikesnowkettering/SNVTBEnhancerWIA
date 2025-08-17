@@ -19,7 +19,11 @@
     ],
   };
 
-  // Retrieve the configuration from chrome.storage.sync.
+  const defaultStorage = { defaultConfig: defaultConfig, boards: {} };
+
+  const boardIdMatch = window.location.href.match(/sysparm_board=([^&]+)/);
+  const boardId = boardIdMatch ? boardIdMatch[1] : null;
+
   function getConfig(callback) {
     if (
       typeof chrome !== 'undefined' &&
@@ -27,18 +31,57 @@
       chrome.storage.sync
     ) {
       chrome.storage.sync.get(
-        { vtbEnhancerConfig: defaultConfig },
+        { vtbEnhancerConfig: defaultStorage },
         function (data) {
-          callback(data.vtbEnhancerConfig);
+          let cfg = data.vtbEnhancerConfig;
+          if (cfg && cfg.ageBands) {
+            cfg = { defaultConfig: cfg, boards: {} };
+          }
+          callback(cfg);
         }
       );
     } else {
-      callback(defaultConfig);
+      callback(defaultStorage);
+    }
+  }
+
+  function saveConfig(cfg, callback) {
+    if (
+      typeof chrome !== 'undefined' &&
+      chrome.storage &&
+      chrome.storage.sync
+    ) {
+      chrome.storage.sync.set({ vtbEnhancerConfig: cfg }, () => {
+        if (callback) callback();
+      });
+    } else {
+      localStorage.setItem('vtbEnhancerConfig', JSON.stringify(cfg));
+      if (callback) callback();
+    }
+  }
+
+  function updateBoardInfo(cfg) {
+    if (!boardId) return;
+    // Prevent prototype pollution
+    if (boardId === '__proto__' || boardId === 'constructor' || boardId === 'prototype') return;
+    const label = document.querySelector('label.sn-navhub-title');
+    if (!label) return;
+    const name = label.textContent.trim();
+    if (!cfg.boards[boardId]) {
+      cfg.boards[boardId] = { name: name };
+      saveConfig(cfg);
+    } else if (cfg.boards[boardId].name !== name) {
+      cfg.boards[boardId].name = name;
+      saveConfig(cfg);
     }
   }
 
   // Load config then run the main logic.
-  getConfig(function (config) {
+  getConfig(function (fullConfig) {
+    const config =
+      boardId && fullConfig.boards[boardId] && fullConfig.boards[boardId].ageBands
+        ? fullConfig.boards[boardId]
+        : fullConfig.defaultConfig;
     // --- Utility Functions ---
     function showDebugMessage(msg) {
       const div = document.createElement('div');
@@ -228,6 +271,7 @@
 
     function init() {
       waitForBoardLoad(() => {
+        updateBoardInfo(fullConfig);
         processExistingCards();
         showDebugMessage(`Updated ${updatedCount} cards with Work Item Age`);
         observeCards();
