@@ -19,6 +19,7 @@ The **ServiceNow Visual Task Board Enhancer - Work Item Age** is a Microsoft Edg
 - Ensures contrast for readability.
 - Displays "Done" with a green badge if the card's **State** is *Resolved*, or contains *Closed* or *Canceled*.
 - Runs efficiently, avoiding duplicate processing of the same cards.
+- Supports board-specific color bands while providing a global default configuration.
 
 ## Requirements
 
@@ -54,11 +55,12 @@ For this extension to function correctly, your ServiceNow instance must meet the
 
 ## Customization
 
-You can customize the color coding of the Work Item Age, both the number of days and the color, by using the Extension Options:
+You can customize the color coding of the Work Item Age, both the number of days and the color, by using the Extension Options. A default set applies to all boards, and any board you visit will appear in the options so you can tailor its colors independently:
 
 1. Click the extension icon in the Edge toolbar and select **Extension Options**.
-2. Adjust the age bands and colors as desired.
-3. Save your changes.
+2. Choose a board or select **Default (All Boards)** from the dropdown.
+3. Adjust the age bands and colors as desired.
+4. Save your changes.
 
 ## Troubleshooting
 
