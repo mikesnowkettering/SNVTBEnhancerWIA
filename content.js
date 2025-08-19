@@ -3,7 +3,7 @@
   Version 0.7
   - Waits until the board has fully loaded all cards (using a MutationObserver with a debounce) 
     before processing any cards or displaying a status message.
-  - Processes each card to calculate and display an "Age" badge based on the card’s "Actual start date".
+  - Processes each card to calculate and display an "Age" badge. It prefers the card’s "Actual start date", which teams can manage independently of when the record was opened, but falls back to the "Opened" date if no start date is provided.
   - Badge background color is determined by configurable age bands loaded from chrome.storage.sync.
   - Continues watching the DOM for new card elements and applies the badge automatically.
 */
@@ -107,20 +107,28 @@
       return Math.floor((Date.now() - d.getTime()) / (1000 * 60 * 60 * 24));
     }
 
-    function findActualStartDate(card) {
+    // Return the card's start date.
+    // Prefer "Actual start date" because teams can manage it separately from when the record was opened.
+    // Fall back to "Opened" only when no start date is provided.
+    function findStartDate(card) {
       const liList = card.querySelectorAll('li.ng-scope');
+      let openedDate = null;
       for (const li of liList) {
         const spans = li.querySelectorAll(
           'span.sn-widget-list-table-cell.ng-binding'
         );
-        if (
-          spans.length >= 2 &&
-          spans[0].textContent.trim() === 'Actual start date'
-        ) {
-          return spans[1].textContent.trim();
+        if (spans.length >= 2) {
+          const label = spans[0].textContent.trim();
+          const value = spans[1].textContent.trim();
+          if (label === 'Actual start date') {
+            return value;
+          }
+          if (label === 'Opened') {
+            openedDate = value;
+          }
         }
       }
-      return null;
+      return openedDate;
     }
 
     function findState(card) {
@@ -200,9 +208,9 @@
             return;
           }
         }
-        const actualStart = findActualStartDate(card);
-        if (!actualStart) return;
-        const age = calculateDaysDiff(actualStart);
+        const startDate = findStartDate(card);
+        if (!startDate) return;
+        const age = calculateDaysDiff(startDate);
         if (age === null) return;
         const badgeColor = getBadgeColor(age);
         const badge = createBadge(
