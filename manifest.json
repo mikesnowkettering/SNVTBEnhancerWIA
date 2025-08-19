@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "ServiceNow Visual Task Board Enhancer - Work Item Age",
   "version": "0.8.2",
-  "description": "Displays work item age on ServiceNow Visual Task Board cards, preferring Actual Start Date and falling back to the Opened date when no start date is managed.",
+  "description": "Displays work item age on ServiceNow Visual Task Board cards.",
   "permissions": [
     "storage"
   ],
