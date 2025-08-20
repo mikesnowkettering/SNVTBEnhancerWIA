@@ -29,7 +29,7 @@ jobs:
           git push https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git
 
       - name: Package extension
-        run: zip -r edge-extension.zip . -x ".*" "*.zip" "LICENSE" "README.md" "bump-version.js" "*screenshot*"
+        run: zip -r edge-extension.zip . -x ".*" "*.zip" "LICENSE" "README.md" "bump-version.js" "*screenshot*" "package.json"
 
       - name: Upload package
         uses: actions/upload-artifact@v3
