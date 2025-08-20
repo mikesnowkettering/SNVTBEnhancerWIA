@@ -32,7 +32,7 @@ jobs:
         run: zip -r edge-extension.zip . -x ".*" "*.zip" "LICENSE" "README.md" "bump-version.js" "*screenshot*" "package.json"
 
       - name: Upload package
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: edge-extension
           path: edge-extension.zip
