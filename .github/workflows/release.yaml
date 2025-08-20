@@ -44,7 +44,7 @@ jobs:
             -H "Content-Type: application/json" \
             --data ""
 
-          curl -fsS -o /dev/null -X POST "https://api.addons.microsoftedge.microsoft.com/v1/products/$EDGE_PRODUCT_ID/submissions/draft/packages" \
+          curl -fsS -o /dev/null -X POST "https://api.addons.microsoftedge.microsoft.com/v1/products/$EDGE_PRODUCT_ID/submissions/draft/package" \
             -H "Authorization: ApiKey $EDGE_API_KEY" \
             -H "X-ClientID: $EDGE_CLIENT_ID" \
             -H "Content-Type: application/zip" \
@@ -62,8 +62,22 @@ jobs:
           done
           [ "$status" = "Succeeded" ] || { echo "Error: package processing status $status"; exit 1; }
 
-          curl -fsS -o /dev/null -X POST "https://api.addons.microsoftedge.microsoft.com/v1/products/$EDGE_PRODUCT_ID/submissions/draft/publish" \
+          publish_headers=$(curl -fsS -D - -o /dev/null -X POST "https://api.addons.microsoftedge.microsoft.com/v1/products/$EDGE_PRODUCT_ID/submissions/draft/publish" \
             -H "Authorization: ApiKey $EDGE_API_KEY" \
             -H "X-ClientID: $EDGE_CLIENT_ID" \
-            -H "Content-Type: application/json"
+            -H "Content-Type: application/json")
+
+          operation_url=$(echo "$publish_headers" | tr -d '\r' | grep -i '^operation-location:' | awk '{print $2}')
+
+          echo "Waiting for publish to complete..."
+          for i in {1..30}; do
+            publish_status=$(curl -fsS -X GET "$operation_url" \
+              -H "Authorization: ApiKey $EDGE_API_KEY" \
+              -H "X-ClientID: $EDGE_CLIENT_ID" \
+              -H "Content-Type: application/json" | jq -r '.status')
+            [ "$publish_status" = "Succeeded" ] && break
+            echo "Current publish status: $publish_status. Retrying in 10s..."
+            sleep 10
+          done
+          [ "$publish_status" = "Succeeded" ] || { echo "Error: publish status $publish_status"; exit 1; }
 
