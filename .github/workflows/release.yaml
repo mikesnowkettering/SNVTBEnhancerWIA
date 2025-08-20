@@ -14,6 +14,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
+      # No npm tests are run since the project does not use Node tooling.
       - name: Bump version
         run: node bump-version.js
 
