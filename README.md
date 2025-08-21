@@ -86,5 +86,3 @@ Pull requests and contributions are welcome! If you encounter any issues or have
 ## License
 
 This project is licensed under the GNU General Public License v3.0. See the [LICENSE](LICENSE) file for details.
-
-This line was added to verify the deployment pipeline.
