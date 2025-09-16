@@ -14,6 +14,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
+      # No npm tests are run since the project does not use Node tooling.
       - name: Bump version
         run: node bump-version.js
 
@@ -28,41 +29,10 @@ jobs:
           git push https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git
 
       - name: Package extension
-        run: zip -r edge-extension.zip . -x ".*" "*.zip" "LICENSE" "README.md" "bump-version.js" "*screenshot*"
+        run: zip -r edge-extension.zip . -x ".*" "*.zip" "LICENSE" "README.md" "bump-version.js" "*screenshot*" "package.json"
 
-      - name: Publish to Edge Add-ons
-        env:
-          EDGE_PRODUCT_ID: ${{ secrets.EDGE_PRODUCT_ID }}
-          EDGE_API_KEY: ${{ secrets.EDGE_API_KEY }}
-          EDGE_CLIENT_ID: ${{ secrets.EDGE_CLIENT_ID }}
-        run: |
-          set -e
-          curl -fsS -o /dev/null -X POST "https://api.addons.microsoftedge.microsoft.com/v1/products/$EDGE_PRODUCT_ID/submissions/draft" \
-            -H "Authorization: ApiKey $EDGE_API_KEY" \
-            -H "X-ClientID: $EDGE_CLIENT_ID" \
-            -H "Content-Type: application/json" \
-            --data ""
-
-          curl -fsS -o /dev/null -X POST "https://api.addons.microsoftedge.microsoft.com/v1/products/$EDGE_PRODUCT_ID/submissions/draft/packages" \
-            -H "Authorization: ApiKey $EDGE_API_KEY" \
-            -H "X-ClientID: $EDGE_CLIENT_ID" \
-            -H "Content-Type: application/zip" \
-            --data-binary @edge-extension.zip
-
-          echo "Waiting for package processing..."
-          for i in {1..30}; do
-            status=$(curl -fsS -X GET "https://api.addons.microsoftedge.microsoft.com/v1/products/$EDGE_PRODUCT_ID/submissions/draft" \
-              -H "Authorization: ApiKey $EDGE_API_KEY" \
-              -H "X-ClientID: $EDGE_CLIENT_ID" \
-              -H "Content-Type: application/json" | jq -r '.status')
-            [ "$status" = "Succeeded" ] && break
-            echo "Current status: $status. Retrying in 10s..."
-            sleep 10
-          done
-          [ "$status" = "Succeeded" ] || { echo "Error: package processing status $status"; exit 1; }
-
-          curl -fsS -o /dev/null -X POST "https://api.addons.microsoftedge.microsoft.com/v1/products/$EDGE_PRODUCT_ID/submissions/draft/publish" \
-            -H "Authorization: ApiKey $EDGE_API_KEY" \
-            -H "X-ClientID: $EDGE_CLIENT_ID" \
-            -H "Content-Type: application/json"
-
+      - name: Upload package
+        uses: actions/upload-artifact@v4
+        with:
+          name: edge-extension
+          path: edge-extension.zip
