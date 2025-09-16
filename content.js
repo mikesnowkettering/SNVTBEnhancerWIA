@@ -187,17 +187,30 @@
 
     let updatedCount = 0;
 
+    const completionPatterns = [
+      /\bresolved\b/,
+      /\bclosed\b/,
+      /\bcancel(?:ed|led)\b/,
+      /^complete/,
+      /\bdiscarded\b/,
+      /\bdone\b/,
+      /\bfulfilled\b/,
+      /\bfinished\b/,
+      /\bfinali[sz]ed\b/,
+      /\baccomplished\b/,
+    ];
+
+    function isCompletionState(text) {
+      const normalizedText = text.trim().toLowerCase();
+      return completionPatterns.some((pattern) => pattern.test(normalizedText));
+    }
+
     function processCard(card) {
       if (card.hasAttribute('data-task-age-enhanced')) return;
       try {
         const state = findState(card);
         if (state) {
-          const normalized = state.toLowerCase();
-          if (
-            normalized === 'resolved' ||
-            normalized.includes('closed') ||
-            normalized.includes('canceled')
-          ) {
+          if (isCompletionState(state)) {
             const badge = createBadge('Done', '#28a745');
             if (getComputedStyle(card).position === 'static') {
               card.style.position = 'relative';
