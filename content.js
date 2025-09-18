@@ -1,9 +1,9 @@
 /*
   ServiceNow Visual Task Board Enhancer - Work Item Age
   Version 0.7
-  - Waits until the board has fully loaded all cards (using a MutationObserver with a debounce) 
+  - Waits until the board has fully loaded all cards (using a MutationObserver with a debounce)
     before processing any cards or displaying a status message.
-  - Processes each card to calculate and display an "Age" badge. It prefers the card’s "Actual start date", which teams can manage independently of when the record was opened, but falls back to the "Opened" date if no start date is provided.
+  - Processes each card to calculate and display an "Age" badge. It prefers the card’s "Actual start date", which teams can manage independently of when the record was opened, and treats "Start date" as the same starting point before finally falling back to "Opened" when no start date exists.
   - Badge background color is determined by configurable age bands loaded from chrome.storage.sync.
   - Continues watching the DOM for new card elements and applies the badge automatically.
 */
@@ -107,28 +107,53 @@
       return Math.floor((Date.now() - d.getTime()) / (1000 * 60 * 60 * 24));
     }
 
-    // Return the card's start date.
-    // Prefer "Actual start date" because teams can manage it separately from when the record was opened.
-    // Fall back to "Opened" only when no start date is provided.
+    function normalizeDateLabel(text) {
+      return text.trim().replace(/\s*:\s*$/, '').toLocaleLowerCase();
+    }
+
+    const DATE_LABELS = {
+      ACTUAL_START: 'actual start date',
+      START: 'start date',
+      OPENED: 'opened',
+    };
+
+    const DATE_PRIORITY = [
+      DATE_LABELS.ACTUAL_START,
+      DATE_LABELS.START,
+      DATE_LABELS.OPENED,
+    ];
+
+    // Return the card's starting point for calculating age.
+    // Both "Actual start date" and "Start date" mark when work begins, so treat them as
+    // interchangeable with "Actual start date" preferred when both exist. If neither
+    // start date is provided, fall back to "Opened" as a backup that represents when
+    // the record was created.
     function findStartDate(card) {
       const liList = card.querySelectorAll('li.ng-scope');
-      let openedDate = null;
+      const detectedDates = {};
+
       for (const li of liList) {
         const spans = li.querySelectorAll(
           'span.sn-widget-list-table-cell.ng-binding'
         );
-        if (spans.length >= 2) {
-          const label = spans[0].textContent.trim();
-          const value = spans[1].textContent.trim();
-          if (label === 'Actual start date') {
-            return value;
-          }
-          if (label === 'Opened') {
-            openedDate = value;
-          }
+        if (spans.length < 2) continue;
+
+        const value = spans[1].textContent.trim();
+        if (!value) continue;
+
+        const normalizedLabel = normalizeDateLabel(spans[0].textContent);
+        if (DATE_PRIORITY.includes(normalizedLabel) && !detectedDates[normalizedLabel]) {
+          detectedDates[normalizedLabel] = value;
         }
       }
-      return openedDate;
+
+      for (const label of DATE_PRIORITY) {
+        if (detectedDates[label]) {
+          return detectedDates[label];
+        }
+      }
+
+      return null;
     }
 
     function findState(card) {
